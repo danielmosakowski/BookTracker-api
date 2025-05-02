@@ -9,10 +9,18 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
+
     public function up(): void
     {
         Schema::create('books', function (Blueprint $table) {
             $table->id();
+            $table->string('title');
+            $table->foreignId('author_id')->constrained()->onDelete('cascade');
+            $table->foreignId('genre_id')->constrained()->onDelete('cascade');
+            $table->string('isbn')->unique()->nullable();
+            $table->text('description')->nullable();
+            $table->string('cover_image')->nullable();
+            $table->year('published_year')->nullable();
             $table->timestamps();
         });
     }

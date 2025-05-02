@@ -13,9 +13,14 @@ return new class extends Migration
     {
         Schema::create('challenges', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->year('year');
+            $table->integer('goal'); // np. ile książek chce przeczytać
+            $table->integer('books_read')->default(0);
             $table->timestamps();
         });
     }
+
 
     /**
      * Reverse the migrations.

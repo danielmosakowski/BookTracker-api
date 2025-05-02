@@ -11,11 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('reading_progress', function (Blueprint $table) {
+        Schema::create('reading_progresses', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('collection_item_id')->constrained()->onDelete('cascade');
+            $table->integer('current_page')->default(0);
+            $table->integer('total_pages')->nullable();
+            $table->float('progress_percent')->default(0);
             $table->timestamps();
         });
     }
+
 
     /**
      * Reverse the migrations.
