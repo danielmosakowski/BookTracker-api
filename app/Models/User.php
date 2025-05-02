@@ -4,6 +4,8 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -21,6 +23,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'is_admin'
     ];
 
     /**
@@ -45,4 +48,30 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    // Relacje
+    public function collectionItems(): HasMany
+    {
+        return $this->hasMany(CollectionItem::class);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    public function challenges(): BelongsToMany
+    {
+        return $this->belongsToMany(Challenge::class);
+    }
+
+
+
+
+
 }
