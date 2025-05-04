@@ -2,6 +2,8 @@
 
 namespace App\Notifications;
 
+use App\Models\Book;
+use App\Models\BookRating;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -11,12 +13,18 @@ class NewCommentOnBook extends Notification
 {
     use Queueable;
 
+    protected Book $book;
+    protected BookRating $bookRating;
+
+
     /**
      * Create a new notification instance.
      */
-    public function __construct()
+    public function __construct(Book $book, BookRating $bookRating)
     {
-        //
+        $this->book = $book;
+        $this->bookRating = $bookRating;
+
     }
 
     /**
@@ -26,25 +34,35 @@ class NewCommentOnBook extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['database'];
     }
 
     /**
      * Get the mail representation of the notification.
      */
-    public function toMail(object $notifiable): MailMessage
-    {
-        return (new MailMessage)
-            ->line('The introduction to the notification.')
-            ->action('Notification Action', url('/'))
-            ->line('Thank you for using our application!');
-    }
+//    public function toMail(object $notifiable): MailMessage
+//    {
+//        return (new MailMessage)
+//            ->line('The introduction to the notification.')
+//            ->action('Notification Action', url('/'))
+//            ->line('Thank you for using our application!');
+//    }
 
     /**
      * Get the array representation of the notification.
      *
      * @return array<string, mixed>
      */
+
+    public function toDatabase($notifiable): array
+    {
+        return [
+            'message' => "Nowy komentarz do książki: {$this->book->title}",
+            'book_id' => $this->book->id,
+            'comment_id' => $this->bookRating->id,
+        ];
+    }
+
     public function toArray(object $notifiable): array
     {
         return [
