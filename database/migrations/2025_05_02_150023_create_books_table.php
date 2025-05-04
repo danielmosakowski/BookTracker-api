@@ -21,6 +21,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->string('cover_image')->nullable();
             $table->year('published_year')->nullable();
+            $table->integer('total_pages')->unsigned()->nullable();
             $table->timestamps();
         });
     }

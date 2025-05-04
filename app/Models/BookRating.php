@@ -6,21 +6,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-
-class CollectionItem extends Model
+class BookRating extends Model
 {
+
     use HasFactory;
 
-    protected $fillable = [
-        'user_id', 'book_id', 'status',
-    ];
-
-    // Relacje
+    // Relacja: ocena należy do użytkownika
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    // Relacja: ocena należy do książki
     public function book(): BelongsTo
     {
         return $this->belongsTo(Book::class);

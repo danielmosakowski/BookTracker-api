@@ -6,19 +6,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-
-class UserRating extends Model
+class UserGenre extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'user_id', 'rating', 'comment',
-    ];
-
-    // Relacje
+    // Relacja: kolekcja należy do użytkownika
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    // Relacja: kolekcja należy do gatunku
+    public function genre(): BelongsTo
+    {
+        return $this->belongsTo(Genre::class);
     }
 
 }

@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('reading_progresses', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('collection_item_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_books_id')->constrained()->onDelete('cascade');
             $table->integer('current_page')->default(0);
-            $table->integer('total_pages')->nullable();
-            $table->float('progress_percent')->default(0);
+            //$table->integer('total_pages')->nullable();
+            //$table->float('progress_percent')->default(0);
             $table->timestamps();
         });
     }

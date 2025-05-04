@@ -11,15 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('challenges', function (Blueprint $table) {
+        Schema::create('user_books', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->year('year');
-            $table->integer('goal'); // np. ile książek chce przeczytać
-            $table->integer('books_read')->default(0);
+            $table->foreignId('book_id')->constrained()->onDelete('cascade');
+            $table->enum('status', ['want_to_read', 'reading', 'read'])->default('want_to_read');
             $table->timestamps();
+            $table->unique(['user_id', 'book_id']);  // uzytkownik nie moze miec tej samej ksiazki 2 razy
         });
     }
+
 
 
     /**
@@ -27,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('challenges');
+        Schema::dropIfExists('collection_items');
     }
 };

@@ -2,9 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -12,29 +11,28 @@ class Book extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'title', 'author_id', 'genre_id', 'isbn', 'description', 'cover_image', 'published_year',
-    ];
-
-    // Relacje
+    // Relacja: książka należy do autora
     public function author(): BelongsTo
     {
         return $this->belongsTo(Author::class);
     }
 
+    // Relacja: książka należy do gatunku
     public function genre(): BelongsTo
     {
         return $this->belongsTo(Genre::class);
     }
 
-    public function collectionItems(): HasMany
+    // Relacja: książka ma wiele ocen
+    public function bookRating(): HasMany
     {
-        return $this->hasMany(CollectionItem::class);
+        return $this->hasMany(BookRating::class);
     }
 
-    public function reviews(): HasMany
+    // Relacja: książka jest częścią kolekcji książek użytkowników
+    public function userBook(): HasMany
     {
-        return $this->hasMany(Review::class);
+        return $this->hasMany(UserBook::class);
     }
 
 }
