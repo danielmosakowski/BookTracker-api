@@ -4,79 +4,137 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
-    // GET /api/users
-    public function index(): JsonResponse
+    // Rejestracja użytkownika
+    public function register(Request $request): JsonResponse
     {
-        $users = User::all();
-        return response()->json(['status' => 'success', 'data' => $users], 200);
-    }
-
-    // GET /api/users/{id}
-    public function show(int $id): JsonResponse
-    {
-        $user = User::findOrFail($id);
-        return response()->json(['status' => 'success', 'data' => $user], 200);
-    }
-
-    // POST /api/users
-    public function store(Request $request): JsonResponse
-    {
-        $data = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users',
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
             'password' => [
-                'required', 'string', 'min:8',
-                'regex:/[A-Z]/',
-                'regex:/[!@#$%^&*(),.?":{}|<>\\-]/',
-                'confirmed'
+                'required', 'string', 'min:8', // Minimum 8 znaków
+                'regex:/[A-Z]/', // Co najmniej jedna wielka litera
+                'regex:/[!@#$%^&*(),.?":{}|<>\\-]/', // Co najmniej jeden znak specjalny
+                'confirmed' // Potwierdzenie hasła
             ],
-            'is_admin' => 'sometimes|boolean',
         ]);
 
-        $data['password'] = bcrypt($data['password']);
-        $user = User::create($data);
-
-        return response()->json(['status' => 'created', 'data' => $user], 201);
-    }
-
-    // PUT/PATCH /api/users/{id}
-    public function update(Request $request, int $id): JsonResponse
-    {
-        $user = User::findOrFail($id);
-
-        $data = $request->validate([
-            'name'     => 'sometimes|string|max:255',
-            'email'    => 'sometimes|email|unique:users,email,' . $user->id,
-            'password' => [
-                'nullable', 'string', 'min:8',
-                'regex:/[A-Z]/',
-                'regex:/[!@#$%^&*(),.?":{}|<>\\-]/',
-                'confirmed'
-            ],
-            'is_admin' => 'sometimes|boolean',
-        ]);
-
-        if (!empty($data['password'])) {
-            $data['password'] = bcrypt($data['password']);
-        } else {
-            unset($data['password']);
+        if ($validator->fails()) {
+            throw new ValidationException($validator);
         }
 
-        $user->update($data);
-        return response()->json(['status' => 'updated', 'data' => $user], 200);
+        // Tworzenie użytkownika
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'User registered successfully',
+            'data' => $user
+        ], 201);
     }
 
-    // DELETE /api/users/{id}
-    public function destroy(int $id): JsonResponse
+    // Logowanie użytkownika
+    public function login(Request $request): JsonResponse
     {
-        $user = User::findOrFail($id);
-        $user->delete();
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'password' => 'required|string',
+        ]);
 
-        return response()->json(['status' => 'deleted', 'message' => 'User removed'], 204);
+        if ($validator->fails()) {
+            throw new ValidationException($validator);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Invalid credentials'
+            ], 401);
+        }
+
+        // Generowanie tokena
+        $token = $user->createToken('YourAppName')->plainTextToken;
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Login successful',
+            'data' => [
+                'user' => $user,
+                'token' => $token
+            ]
+        ], 200);
+    }
+
+    // Pobieranie danych o użytkowniku
+    public function me(): JsonResponse
+    {
+        return response()->json([
+            'status' => 'success',
+            'data' => auth()->user()  // Zakładając, że masz middleware dla autoryzacji
+        ], 200);
+    }
+
+    // Zmiana hasła użytkownika
+    public function changePassword(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'current_password' => 'required|string',
+            'new_password' => [
+                'required', 'string', 'min:8', // Minimum 8 znaków
+                'regex:/[A-Z]/', // Co najmniej jedna wielka litera
+                'regex:/[!@#$%^&*(),.?":{}|<>\\-]/', // Co najmniej jeden znak specjalny
+                'confirmed' // Potwierdzenie hasła
+            ],
+        ]);
+
+        if ($validator->fails()) {
+            throw new ValidationException($validator);
+        }
+
+        $user = auth()->user(); // Pobranie aktualnie zalogowanego użytkownika
+
+        // Sprawdzenie poprawności obecnego hasła
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Current password is incorrect'
+            ], 400);
+        }
+
+        // Zmiana hasła
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Password changed successfully'
+        ], 200);
+    }
+
+    // Wylogowanie użytkownika
+    public function logout(): JsonResponse
+    {
+        // Usunięcie tokenu użytkownika
+        auth()->user()->tokens->each(function ($token) {
+            $token->delete();
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Logged out successfully'
+        ], 200);
     }
 }
-

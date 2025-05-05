@@ -2,31 +2,60 @@
 
 namespace App\Models;
 
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Notifications\Notification;
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-/**
- * @property \Illuminate\Database\Eloquent\Collection|UserBook[] $userBooks
- * @property \Illuminate\Database\Eloquent\Collection|UserGenre[] $userGenres
- */
 
-class User extends Model
+class User extends Authenticatable
 {
+    use HasApiTokens, HasFactory, Notifiable;
 
-    use HasFactory, Notifiable;
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        'is_admin',
+        'language'
+    ];
 
-    // Relacja: użytkownik ma wiele książek w swojej kolekcji
-    public function userBook(): HasMany
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'is_admin' => 'boolean',
+    ];
+
+    public function userBooks(): HasMany
     {
         return $this->hasMany(UserBook::class);
     }
 
-    // Relacja: użytkownik ma wiele ulubionych gatunków
-    public function userGenre(): HasMany
+    public function userGenres(): HasMany
     {
         return $this->hasMany(UserGenre::class);
     }
 
+    public function ratings(): HasMany
+    {
+        return $this->hasMany(BookRating::class);
+    }
+
+    public function challenges(): BelongsToMany
+    {
+        return $this->belongsToMany(Challenge::class, 'user_challenges')
+            ->withPivot(['completed_books', 'is_completed']);
+    }
+
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
+    }
 }

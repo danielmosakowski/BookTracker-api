@@ -5,14 +5,24 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
-class UserGenre extends Model
+class Notification extends Model
 {
     use HasFactory;
 
     protected $fillable = [
+        'type',
+        'data',
+        'read_at',
         'user_id',
-        'genre_id'
+        'notifiable_id',
+        'notifiable_type'
+    ];
+
+    protected $casts = [
+        'data' => 'array',
+        'read_at' => 'datetime'
     ];
 
     public function user(): BelongsTo
@@ -20,8 +30,8 @@ class UserGenre extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function genre(): BelongsTo
+    public function notifiable(): MorphTo
     {
-        return $this->belongsTo(Genre::class);
+        return $this->morphTo();
     }
 }

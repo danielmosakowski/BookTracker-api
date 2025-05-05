@@ -8,13 +8,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Author extends Model
 {
-
     use HasFactory;
 
-    // Relacja: autor ma wiele książek
-    public function book(): HasMany
+    protected $fillable = [
+        'name',
+        'biography',
+        'photo'
+    ];
+
+    public function books(): HasMany
     {
         return $this->hasMany(Book::class);
     }
-
 }

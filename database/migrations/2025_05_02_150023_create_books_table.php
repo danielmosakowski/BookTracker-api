@@ -4,12 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
-    /**
-     * Run the migrations.
-     */
-
+return new class extends Migration {
     public function up(): void
     {
         Schema::create('books', function (Blueprint $table) {
@@ -23,12 +18,12 @@ return new class extends Migration
             $table->year('published_year')->nullable();
             $table->integer('total_pages')->unsigned()->nullable();
             $table->timestamps();
+
+            $table->index('title'); // Dodane dla szybkiego wyszukiwania
+            $table->index('published_year');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('books');

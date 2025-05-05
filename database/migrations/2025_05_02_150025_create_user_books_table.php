@@ -4,11 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
-    /**
-     * Run the migrations.
-     */
+return new class extends Migration {
     public function up(): void
     {
         Schema::create('user_books', function (Blueprint $table) {
@@ -17,17 +13,12 @@ return new class extends Migration
             $table->foreignId('book_id')->constrained()->onDelete('cascade');
             $table->enum('status', ['want_to_read', 'reading', 'read'])->default('want_to_read');
             $table->timestamps();
-            $table->unique(['user_id', 'book_id']);  // uzytkownik nie moze miec tej samej ksiazki 2 razy
+            $table->unique(['user_id', 'book_id']);
         });
     }
 
-
-
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('collection_items');
+        Schema::dropIfExists('user_books');
     }
 };

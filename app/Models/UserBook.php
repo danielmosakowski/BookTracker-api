@@ -7,35 +7,28 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-
-
 class UserBook extends Model
 {
-
     use HasFactory;
 
-    // Relacja: kolekcja należy do użytkownika
+    protected $fillable = [
+        'status',
+        'user_id',
+        'book_id'
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    // Relacja: kolekcja należy do książki
     public function book(): BelongsTo
     {
         return $this->belongsTo(Book::class);
     }
 
-    // Relacja: kolekcja ma wiele postępów w czytaniu
-    public function readingProgress(): HasMany
+    public function readingProgresses(): HasMany
     {
         return $this->hasMany(ReadingProgress::class);
     }
-
-    // Relacja: kolekcja ma wiele ocen
-    public function bookRating(): HasMany
-    {
-        return $this->hasMany(BookRating::class);
-    }
-
 }

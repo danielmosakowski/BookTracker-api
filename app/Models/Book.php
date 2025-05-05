@@ -11,28 +11,34 @@ class Book extends Model
 {
     use HasFactory;
 
-    // Relacja: książka należy do autora
+    protected $fillable = [
+        'title',
+        'author_id',
+        'genre_id',
+        'isbn',
+        'description',
+        'cover_image',
+        'published_year',
+        'total_pages'
+    ];
+
     public function author(): BelongsTo
     {
         return $this->belongsTo(Author::class);
     }
 
-    // Relacja: książka należy do gatunku
     public function genre(): BelongsTo
     {
         return $this->belongsTo(Genre::class);
     }
 
-    // Relacja: książka ma wiele ocen
-    public function bookRating(): HasMany
+    public function ratings(): HasMany
     {
         return $this->hasMany(BookRating::class);
     }
 
-    // Relacja: książka jest częścią kolekcji książek użytkowników
-    public function userBook(): HasMany
+    public function userBooks(): HasMany
     {
         return $this->hasMany(UserBook::class);
     }
-
 }

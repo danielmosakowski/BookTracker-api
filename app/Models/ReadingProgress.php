@@ -8,13 +8,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ReadingProgress extends Model
 {
-
     use HasFactory;
 
-    // Relacja: postęp należy do kolekcji książek użytkownika
+    protected $fillable = [
+        'current_page',
+        'user_book_id'
+    ];
+
+
     public function userBook(): BelongsTo
     {
-        return $this->belongsTo(UserBook::class);
+        return $this->belongsTo(UserBook::class, 'user_book_id'); // Jawne określenie klucza
     }
-
 }
