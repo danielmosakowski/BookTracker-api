@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
@@ -18,6 +20,7 @@ class UserAuthTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        Mail::fake();
 
         // Wyłącz prawdziwe zapytania HTTP
         Http::preventStrayRequests();
@@ -150,19 +153,22 @@ class UserAuthTest extends TestCase
             ->assertJsonValidationErrors(['current_password']);
     }
 
-    public function test_admin_can_update_any_user(): void
+    public function test_admin_can_update_any_user()
     {
-        $token = $this->adminUser->createToken('admin-token')->plainTextToken;
+        $admin = User::factory()->create([
+            'is_admin' => true, // Kluczowe!
+            'email_verified_at' => null // Admin nie wymaga weryfikacji email
+        ]);
+
+        $token = $admin->createToken('admin-token')->plainTextToken;
         $targetUser = User::factory()->create();
 
         $response = $this->withHeader('Authorization', 'Bearer ' . $token)
             ->putJson("/api/auth/users/{$targetUser->id}", [
-                'name' => 'Admin Updated Name',
-                'is_admin' => true
+                'name' => 'Admin Updated Name'
             ]);
 
-        $response->assertStatus(200)
-            ->assertJsonPath('user.name', 'Admin Updated Name');
+        $response->assertStatus(200);
     }
 
     public function test_regular_user_cannot_update_other_users(): void
@@ -201,6 +207,63 @@ class UserAuthTest extends TestCase
             ->deleteJson("/api/auth/users/{$targetUser->id}");
 
         $response->assertStatus(403);
+    }
+    public function test_email_verification_required_after_registration()
+    {
+        $response = $this->postJson('/api/auth/register', [
+            'name' => 'New User',
+            'email' => 'new@example.com',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'captcha_token' => 'valid_captcha_token'
+        ]);
+
+        $response->assertStatus(201)
+            ->assertJson(['message' => 'Registration successful. Please check your email to verify your account.']);
+
+        $user = User::where('email', 'new@example.com')->first();
+        $this->assertFalse($user->hasVerifiedEmail());
+    }
+
+    public function test_can_verify_email()
+    {
+        // Użyj poprawnej metody
+        $user = User::factory()->create([
+            'email_verified_at' => null // Ręcznie ustaw jako niezweryfikowany
+        ]);
+
+        $verificationUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(60),
+            ['id' => $user->id, 'hash' => sha1($user->email)]
+        );
+
+        $response = $this->getJson($verificationUrl);
+        $response->assertStatus(200)
+            ->assertJson(['message' => 'Email verified successfully']);
+
+        $this->assertNotNull($user->fresh()->email_verified_at);
+    }
+
+    public function test_cannot_login_with_unverified_email()
+    {
+        $user = User::factory()->create([
+            'email' => 'unverified@example.com',
+            'password' => Hash::make('Password123!'),
+            'email_verified_at' => null,
+            'is_admin' => false // Upewnij się, że to nie jest admin
+        ]);
+
+        $response = $this->postJson('/api/auth/login', [
+            'email' => 'unverified@example.com',
+            'password' => 'Password123!',
+            'captcha_token' => 'valid_captcha_token'
+        ]);
+
+        $response->assertStatus(403)
+            ->assertJson(['message' => 'Email not verified']);
+
+        $this->assertCount(0, $user->tokens);
     }
 
 

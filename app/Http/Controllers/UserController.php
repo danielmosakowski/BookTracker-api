@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Auth\Events\Registered;
+use Illuminate\Auth\Events\Verified;
 
 class UserController extends Controller
 {
@@ -27,17 +29,45 @@ class UserController extends Controller
             return response()->json(['message' => 'Invalid CAPTCHA'], 422);
         }
 
-        // Zmieniamy sposób tworzenia użytkownika
-        $user = new User();
-        $user->name = $validated['name'];
-        $user->email = $validated['email'];
-        $user->password = Hash::make($validated['password']);
-        $user->save();
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        event(new Registered($user)); // Wysyła e-mail weryfikacyjny
 
         return response()->json([
-            'message' => 'User registered successfully',
+            'message' => 'Registration successful. Please check your email to verify your account.',
             'user' => $user
         ], 201);
+    }
+
+    public function verifyEmail(Request $request, $id, $hash)
+    {
+        $user = User::findOrFail($id);
+
+        if (!hash_equals($hash, sha1($user->getEmailForVerification()))) {
+            abort(403);
+        }
+
+        if (!$user->hasVerifiedEmail()) {
+            $user->markEmailAsVerified();
+            event(new Verified($user));
+        }
+
+        return response()->json(['message' => 'Email verified successfully']);
+    }
+
+    public function resendVerificationEmail(Request $request): JsonResponse
+    {
+        if ($request->user()->hasVerifiedEmail()) {
+            return response()->json(['message' => 'Email already verified']);
+        }
+
+        $request->user()->sendEmailVerificationNotification();
+
+        return response()->json(['message' => 'Verification link resent']);
     }
 
     public function login(Request $request): JsonResponse
@@ -52,16 +82,25 @@ class UserController extends Controller
             return response()->json(['message' => 'Invalid CAPTCHA'], 422);
         }
 
+        // Używaj tylko email i password do uwierzytelniania
         if (!Auth::attempt(['email' => $validated['email'], 'password' => $validated['password']])) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
-        $token = $request->user()->createToken('auth-token')->plainTextToken;
+        $user = $request->user();
+
+        // Zezwól na logowanie adminom bez weryfikacji
+        if (!$user->hasVerifiedEmail() && !$user->is_admin) {
+            Auth::logout();
+            return response()->json(['message' => 'Email not verified'], 403);
+        }
+
+        $token = $user->createToken('auth-token')->plainTextToken;
 
         return response()->json([
             'message' => 'Login successful',
             'token' => $token,
-            'user' => Auth::user()
+            'user' => $user
         ]);
     }
 
