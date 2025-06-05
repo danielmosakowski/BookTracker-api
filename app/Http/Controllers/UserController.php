@@ -9,7 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
-
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
 {
@@ -19,7 +20,12 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => $this->passwordRules(),
+            'captcha_token' => 'required|string'
         ]);
+
+        if (!$this->verifyCaptcha($validated['captcha_token'])) {
+            return response()->json(['message' => 'Invalid CAPTCHA'], 422);
+        }
 
         // Zmieniamy sposób tworzenia użytkownika
         $user = new User();
@@ -39,9 +45,14 @@ class UserController extends Controller
         $validated = $request->validate([
             'email' => 'required|email',
             'password' => 'required|string',
+            'captcha_token' => 'required|string'
         ]);
 
-        if (!Auth::attempt($validated)) {
+        if (!$this->verifyCaptcha($validated['captcha_token'])) {
+            return response()->json(['message' => 'Invalid CAPTCHA'], 422);
+        }
+
+        if (!Auth::attempt(['email' => $validated['email'], 'password' => $validated['password']])) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
@@ -52,6 +63,22 @@ class UserController extends Controller
             'token' => $token,
             'user' => Auth::user()
         ]);
+    }
+
+    protected function verifyCaptcha(string $token): bool
+    {
+        // W środowisku testowym - specjalna logika
+        if (app()->environment('testing')) {
+            return $token === 'valid_captcha_token'; // Tylko ten token będzie akceptowany
+        }
+
+        // Dla środowiska produkcyjnego
+        $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+            'secret' => env('RECAPTCHA_SECRET_KEY'),
+            'response' => $token
+        ]);
+
+        return $response->successful() && $response->json('success');
     }
 
     public function logout(Request $request): JsonResponse

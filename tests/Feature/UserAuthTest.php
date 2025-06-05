@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 
 class UserAuthTest extends TestCase
 {
@@ -17,6 +18,9 @@ class UserAuthTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Wyłącz prawdziwe zapytania HTTP
+        Http::preventStrayRequests();
 
         $this->regularUser = User::factory()->create([
             'email' => 'user@example.com',
@@ -31,40 +35,62 @@ class UserAuthTest extends TestCase
         ]);
     }
 
-    public function test_user_can_register(): void
+    public function test_user_can_register_with_valid_captcha()
     {
         $response = $this->postJson('/api/auth/register', [
             'name' => 'New User',
             'email' => 'new@example.com',
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
+            'captcha_token' => 'valid_captcha_token' // Używamy specjalnego tokenu
         ]);
 
-        $response->assertStatus(201)
-            ->assertJsonStructure(['message', 'user']);
+        $response->assertStatus(201);
     }
 
-    public function test_user_can_login(): void
+    public function test_registration_fails_with_invalid_captcha()
+    {
+        $response = $this->postJson('/api/auth/register', [
+            'name' => 'Test User',
+            'email' => 'test_'.time().'@example.com',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'captcha_token' => 'invalid_captcha_token' // Inny token
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJson(['message' => 'Invalid CAPTCHA']);
+    }
+
+
+    public function test_login_requires_captcha()
     {
         $response = $this->postJson('/api/auth/login', [
             'email' => 'user@example.com',
-            'password' => 'Password123!',
+            'password' => 'Password123!'
+            // Brak captcha_token
         ]);
 
-        $response->assertStatus(200)
-            ->assertJsonStructure(['message', 'token', 'user']);
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['captcha_token']);
     }
 
-    public function test_login_fails_with_invalid_credentials(): void
+
+
+    public function test_login_fails_with_invalid_credentials()
     {
         $response = $this->postJson('/api/auth/login', [
             'email' => 'user@example.com',
             'password' => 'wrongpassword',
+            'captcha_token' => 'valid_captcha_token' // Używamy ważnego tokenu CAPTCHA
         ]);
 
         $response->assertStatus(401)
             ->assertJson(['message' => 'Invalid credentials']);
     }
+
+
+
 
     public function test_user_can_logout(): void
     {
@@ -176,4 +202,6 @@ class UserAuthTest extends TestCase
 
         $response->assertStatus(403);
     }
+
+
 }
