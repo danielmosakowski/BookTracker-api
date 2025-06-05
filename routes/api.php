@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\AuthorController;
 
 Route::prefix('auth')->group(function () {
     // Publiczne endpointy
@@ -29,4 +30,22 @@ Route::prefix('auth')->group(function () {
         Route::get('/me', [UserController::class, 'me']);
         Route::put('/user', [UserController::class, 'update']);
     });
+});
+
+
+
+// AUTHORS
+Route::prefix('auth')->group(function () {
+    // ... (poprzednie endpointy auth pozostają bez zmian)
+});
+
+// Publiczne endpointy (dostęp bez logowania)
+Route::get('/authors', [AuthorController::class, 'index']);
+Route::get('/authors/{id}', [AuthorController::class, 'show']);
+
+// Chronione endpointy (wymagają logowania)
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::post('/authors', [AuthorController::class, 'store']);
+    Route::put('/authors/{id}', [AuthorController::class, 'update']);
+    Route::delete('/authors/{id}', [AuthorController::class, 'destroy']);
 });

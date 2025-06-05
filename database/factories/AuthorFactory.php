@@ -4,20 +4,21 @@ namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Author>
- */
 class AuthorFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
-            //
+            'name' => $this->faker->name,
+            'biography' => $this->faker->paragraph,
+            'photo' => $this->faker->optional()->imageUrl(200, 200, 'people')
         ];
+    }
+
+    public function withPhoto(): static
+    {
+        return $this->state([
+            'photo' => '/storage/authors/' . $this->faker->uuid . '.jpg'
+        ]);
     }
 }
