@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\GenreController;
+use App\Http\Controllers\UserGenreController;
 
 Route::prefix('auth')->group(function () {
     // Publiczne endpointy
@@ -62,4 +63,19 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::post('/genres', [GenreController::class, 'store']);
     Route::put('/genres/{id}', [GenreController::class, 'update']);
     Route::delete('/genres/{id}', [GenreController::class, 'destroy']);
+});
+
+
+
+
+
+// UserGenre endpoints
+Route::get('/user-genres', [UserGenreController::class, 'index']);
+Route::get('/user-genres/{id}', [UserGenreController::class, 'show']);
+Route::get('/genres/{genreId}/user-genres', [UserGenreController::class, 'byGenre']);
+Route::get('/users/{userId}/user-genres', [UserGenreController::class, 'byUser']);
+
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::post('/user-genres', [UserGenreController::class, 'store']);
+    Route::delete('/user-genres/{id}', [UserGenreController::class, 'destroy']);
 });

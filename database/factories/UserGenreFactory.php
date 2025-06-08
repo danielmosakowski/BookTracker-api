@@ -2,12 +2,14 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
+use App\Models\Genre;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\UserGenre>
  */
-class UserGenresCollectionFactory extends Factory
+class UserGenreFactory extends Factory
 {
     /**
      * Define the model's default state.
@@ -17,7 +19,8 @@ class UserGenresCollectionFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'user_id' => User::factory(),
+            'genre_id' => Genre::factory(),
         ];
     }
 }

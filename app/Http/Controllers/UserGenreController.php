@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\UserGenre;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Validation\Rule;
 
 class UserGenreController extends Controller
 {
@@ -18,7 +19,7 @@ class UserGenreController extends Controller
         return response()->json([
             'status' => 'success',
             'data'   => $list,
-        ], 200);
+        ]);
     }
 
     /**
@@ -31,7 +32,7 @@ class UserGenreController extends Controller
         return response()->json([
             'status' => 'success',
             'data'   => $item,
-        ], 200);
+        ]);
     }
 
     /**
@@ -47,7 +48,7 @@ class UserGenreController extends Controller
         return response()->json([
             'status' => 'success',
             'data'   => $list,
-        ], 200);
+        ]);
     }
 
     /**
@@ -63,7 +64,7 @@ class UserGenreController extends Controller
         return response()->json([
             'status' => 'success',
             'data'   => $list,
-        ], 200);
+        ]);
     }
 
     /**
@@ -74,7 +75,13 @@ class UserGenreController extends Controller
     {
         $data = $request->validate([
             'user_id'  => 'required|exists:users,id',
-            'genre_id' => 'required|exists:genres,id',
+            'genre_id' => [
+                'required',
+                'exists:genres,id',
+                Rule::unique('user_genres')->where(function ($query) use ($request) {
+                    return $query->where('user_id', $request->user_id);
+                })
+            ],
         ]);
 
         $item = UserGenre::create($data);
@@ -94,9 +101,6 @@ class UserGenreController extends Controller
         $item = UserGenre::findOrFail($id);
         $item->delete();
 
-        return response()->json([
-            'status'  => 'deleted',
-            'message' => 'Removed from favorites',
-        ], 204);
+        return response()->json(null, 204);
     }
 }
