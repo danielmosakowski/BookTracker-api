@@ -10,6 +10,7 @@ use App\Http\Controllers\BookController;
 use App\Http\Controllers\BookRatingController;
 use App\Http\Controllers\ReadingProgressController;
 use App\Http\Controllers\UserBookController;
+use App\Http\Controllers\ChallengeController;
 
 
 Route::prefix('auth')->group(function () {
@@ -135,3 +136,25 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::put('/user-books/{id}', [UserBookController::class, 'update']);
     Route::delete('/user-books/{id}', [UserBookController::class, 'destroy']);
 });
+
+
+
+
+Route::middleware(['auth:sanctum'])->group(function () {
+    // Public challenge routes (for all authenticated users)
+    Route::get('/challenges', [ChallengeController::class, 'index']);
+    Route::get('/challenges/{challenge}', [ChallengeController::class, 'show']);
+
+    // User challenge participation
+    Route::post('/challenges/{challenge}/join', [ChallengeController::class, 'joinChallenge']);
+    Route::get('/challenges/{challenge}/progress', [ChallengeController::class, 'userProgress']);
+
+    // Admin-only routes
+    Route::middleware('admin')->group(function () {
+        Route::post('/challenges', [ChallengeController::class, 'store']);
+        Route::put('/challenges/{challenge}', [ChallengeController::class, 'update']);
+        Route::delete('/challenges/{challenge}', [ChallengeController::class, 'destroy']);
+    });
+});
+
+
