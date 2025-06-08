@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\UserGenreController;
 use App\Http\Controllers\BookController;
+use App\Http\Controllers\BookRatingController;
 
 Route::prefix('auth')->group(function () {
     // Publiczne endpointy
@@ -94,4 +95,16 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::post('/books', [BookController::class, 'store']);
     Route::put('/books/{id}', [BookController::class, 'update']);
     Route::delete('/books/{id}', [BookController::class, 'destroy']);
+});
+
+
+
+// BookRating endpoints
+Route::get('/books/{bookId}/ratings', [BookRatingController::class, 'index']);
+Route::get('/ratings/{id}', [BookRatingController::class, 'show']);
+
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::post('/books/{bookId}/ratings', [BookRatingController::class, 'store']);
+    Route::put('/ratings/{id}', [BookRatingController::class, 'update']);
+    Route::delete('/ratings/{id}', [BookRatingController::class, 'destroy']);
 });
