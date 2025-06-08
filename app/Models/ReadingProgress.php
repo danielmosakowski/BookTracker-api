@@ -10,14 +10,15 @@ class ReadingProgress extends Model
 {
     use HasFactory;
 
+    protected $table = 'reading_progresses'; // Dodaj tę linię
+
     protected $fillable = [
         'current_page',
         'user_book_id'
     ];
 
-
     public function userBook(): BelongsTo
     {
-        return $this->belongsTo(UserBook::class, 'user_book_id'); // Jawne określenie klucza
+        return $this->belongsTo(UserBook::class, 'user_book_id');
     }
 }

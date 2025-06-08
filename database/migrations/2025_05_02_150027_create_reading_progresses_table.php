@@ -11,7 +11,7 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('user_book_id')->constrained('user_books')->onDelete('cascade');
             $table->integer('current_page')->unsigned()->default(0);
-            $table->timestamp('updated_at')->nullable(); // Zastępuje timestamps()
+            $table->timestamps();
         });
     }
 

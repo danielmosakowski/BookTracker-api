@@ -8,6 +8,9 @@ use App\Http\Controllers\GenreController;
 use App\Http\Controllers\UserGenreController;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\BookRatingController;
+use App\Http\Controllers\ReadingProgressController;
+
+
 
 Route::prefix('auth')->group(function () {
     // Publiczne endpointy
@@ -108,3 +111,16 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::put('/ratings/{id}', [BookRatingController::class, 'update']);
     Route::delete('/ratings/{id}', [BookRatingController::class, 'destroy']);
 });
+
+
+
+
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    // ReadingProgress routes
+    Route::get('/user-books/{userBookId}/progress', [ReadingProgressController::class, 'show']);
+    Route::post('/user-books/{userBookId}/progress', [ReadingProgressController::class, 'store']);
+    Route::put('/user-books/{userBookId}/progress', [ReadingProgressController::class, 'update']);
+    Route::delete('/progress/{id}', [ReadingProgressController::class, 'destroy']);
+});
+
+

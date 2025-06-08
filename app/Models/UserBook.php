@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class UserBook extends Model
 {
@@ -27,8 +28,8 @@ class UserBook extends Model
         return $this->belongsTo(Book::class);
     }
 
-    public function readingProgresses(): HasMany
+    public function readingProgress(): HasOne
     {
-        return $this->hasMany(ReadingProgress::class);
+        return $this->hasOne(ReadingProgress::class, 'user_book_id');
     }
 }
