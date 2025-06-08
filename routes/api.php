@@ -9,7 +9,7 @@ use App\Http\Controllers\UserGenreController;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\BookRatingController;
 use App\Http\Controllers\ReadingProgressController;
-
+use App\Http\Controllers\UserBookController;
 
 
 Route::prefix('auth')->group(function () {
@@ -124,3 +124,14 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 });
 
 
+
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+    // UserBook endpoints
+    Route::get('/user-books', [UserBookController::class, 'index']);
+    Route::get('/user-books/{id}', [UserBookController::class, 'show']);
+    Route::get('/books/{bookId}/user-books', [UserBookController::class, 'byBook']);
+    Route::get('/users/{userId}/user-books', [UserBookController::class, 'byUser']);
+    Route::post('/user-books', [UserBookController::class, 'store']);
+    Route::put('/user-books/{id}', [UserBookController::class, 'update']);
+    Route::delete('/user-books/{id}', [UserBookController::class, 'destroy']);
+});

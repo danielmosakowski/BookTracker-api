@@ -5,105 +5,143 @@ namespace App\Http\Controllers;
 use App\Models\UserBook;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 
 class UserBookController extends Controller
 {
     /**
      * GET /api/user-books
-     * List all books in the authenticated user’s collection.
+     * List all books in the authenticated user's collection.
      */
     public function index(Request $request): JsonResponse
     {
-        $list = $request->user()
-            ->userBooks()   // assumes User model has: public function userBooks() { return $this->hasMany(UserBook::class); }
-            ->with('book')
+        $userBooks = $request->user()
+            ->userBooks()
+            ->with(['book', 'readingProgress'])
             ->get();
 
         return response()->json([
             'status' => 'success',
-            'data'   => $list,
-        ], 200);
+            'data' => $userBooks,
+        ]);
     }
 
     /**
      * GET /api/user-books/{id}
-     * Show a single entry by its primary key.
+     * Show a single user-book entry.
      */
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
-        $item = UserBook::with(['book','user'])->findOrFail($id);
+        $userBook = $request->user()
+            ->userBooks()
+            ->with(['book', 'user', 'readingProgress'])
+            ->findOrFail($id);
 
         return response()->json([
             'status' => 'success',
-            'data'   => $item,
-        ], 200);
+            'data' => $userBook,
+        ]);
     }
 
     /**
      * GET /api/books/{bookId}/user-books
-     * List all user‑book entries for a specific book.
+     * List all user-book entries for a specific book.
      */
     public function byBook(int $bookId): JsonResponse
     {
-        $list = UserBook::where('book_id', $bookId)
-            ->with(['user','book'])
+        $userBooks = UserBook::where('book_id', $bookId)
+            ->with(['user', 'book', 'readingProgress'])
             ->get();
 
         return response()->json([
             'status' => 'success',
-            'data'   => $list,
-        ], 200);
+            'data' => $userBooks,
+        ]);
     }
 
     /**
      * GET /api/users/{userId}/user-books
-     * List all user‑book entries for a specific user.
+     * List all user-book entries for a specific user.
      */
     public function byUser(int $userId): JsonResponse
     {
-        $list = UserBook::where('user_id', $userId)
-            ->with(['user','book'])
+        $userBooks = UserBook::where('user_id', $userId)
+            ->with(['book', 'readingProgress'])
             ->get();
 
         return response()->json([
             'status' => 'success',
-            'data'   => $list,
-        ], 200);
+            'data' => $userBooks,
+        ]);
     }
 
     /**
      * POST /api/user-books
-     * Add a book to the authenticated user’s collection.
+     * Add a book to the authenticated user's collection.
      */
     public function store(Request $request): JsonResponse
     {
-        $data = $request->validate([
+        $validated = $request->validate([
             'book_id' => 'required|exists:books,id',
+            'status' => 'sometimes|in:want_to_read,reading,read',
         ]);
 
-        $data['user_id'] = $request->user()->id;
+        // Check if the book is already in user's collection
+        if ($request->user()->userBooks()->where('book_id', $validated['book_id'])->exists()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'This book is already in your collection',
+            ], 409);
+        }
 
-        $item = UserBook::create($data);
+        $userBook = $request->user()->userBooks()->create([
+            'book_id' => $validated['book_id'],
+            'status' => $validated['status'] ?? 'want_to_read',
+        ]);
 
         return response()->json([
             'status' => 'created',
-            'data'   => $item,
+            'data' => $userBook->load('book'),
         ], 201);
     }
 
     /**
-     * DELETE /api/user-books/{id}
-     * Remove a book from the authenticated user’s collection.
-     * (Role/ownership checks to be added later.)
+     * PUT /api/user-books/{id}
+     * Update a book in the authenticated user's collection.
      */
-    public function destroy(int $id): JsonResponse
+    public function update(Request $request, int $id): JsonResponse
     {
-        $item = UserBook::findOrFail($id);
-        $item->delete();
+        $validated = $request->validate([
+            'status' => 'required|in:want_to_read,reading,read',
+        ]);
+
+        $userBook = $request->user()
+            ->userBooks()
+            ->findOrFail($id);
+
+        $userBook->update($validated);
 
         return response()->json([
-            'status'  => 'deleted',
-            'message' => 'Removed from collection',
+            'status' => 'updated',
+            'data' => $userBook->load('book'),
+        ]);
+    }
+
+    /**
+     * DELETE /api/user-books/{id}
+     * Remove a book from the authenticated user's collection.
+     */
+    public function destroy(Request $request, int $id): JsonResponse
+    {
+        $userBook = $request->user()
+            ->userBooks()
+            ->findOrFail($id);
+
+        $userBook->delete();
+
+        return response()->json([
+            'status' => 'deleted',
+            'message' => 'Book removed from your collection',
         ], 204);
     }
 }

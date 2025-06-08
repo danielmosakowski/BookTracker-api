@@ -13,7 +13,8 @@ class UserBookFactory extends Factory
         return [
             'user_id' => User::factory(),
             'book_id' => Book::factory(),
-            'status' => $this->faker->randomElement(['reading', 'planned', 'completed']),
+            //'status' => $this->faker->randomElement(['reading', 'planned', 'completed']),
+            'status' => $this->faker->randomElement(['want_to_read', 'reading', 'read']),
         ];
     }
 }
