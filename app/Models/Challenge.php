@@ -24,4 +24,11 @@ class Challenge extends Model
             ->withPivot(['completed_books', 'is_completed'])
             ->withTimestamps();
     }
+    public function participants()
+    {
+        return $this->belongsToMany(User::class, 'user_challenges')
+            ->using(UserChallenge::class)
+            ->withPivot(['completed_books', 'is_completed'])
+            ->withTimestamps();
+    }
 }

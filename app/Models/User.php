@@ -51,7 +51,9 @@ class User extends Authenticatable implements MustVerifyEmail
     public function challenges(): BelongsToMany
     {
         return $this->belongsToMany(Challenge::class, 'user_challenges')
-            ->withPivot(['completed_books', 'is_completed']);
+            ->using(UserChallenge::class)
+            ->withPivot(['completed_books', 'is_completed'])
+            ->withTimestamps();
     }
 
     public function notifications(): HasMany
