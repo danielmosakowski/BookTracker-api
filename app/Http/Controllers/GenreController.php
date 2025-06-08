@@ -11,42 +11,63 @@ class GenreController extends Controller
     // GET /api/genres
     public function index(): JsonResponse
     {
-        return response()->json(['status'=>'success','data'=>Genre::all()], 200);
+        $genres = Genre::all();
+        return response()->json([
+            'status' => 'success',
+            'data' => $genres
+        ], 200);
     }
 
     // GET /api/genres/{id}
     public function show(int $id): JsonResponse
     {
         $genre = Genre::findOrFail($id);
-        return response()->json(['status'=>'success','data'=>$genre], 200);
+        return response()->json([
+            'status' => 'success',
+            'data' => $genre
+        ], 200);
     }
 
     // GET /api/genres/{id}/books
     public function books(int $id): JsonResponse
     {
         $genre = Genre::findOrFail($id);
-        return response()->json(['status'=>'success','data'=>$genre->books], 200);
+        return response()->json([
+            'status' => 'success',
+            'data' => $genre->books
+        ], 200);
     }
 
     // POST /api/genres
     public function store(Request $request): JsonResponse
     {
-        $data = $request->validate([
-            'name' => 'required|string|unique:genres',
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:genres',
+            'description' => 'nullable|string' // Dodane pole description
         ]);
-        $genre = Genre::create($data);
-        return response()->json(['status'=>'created','data'=>$genre], 201);
+
+        $genre = Genre::create($validated);
+        return response()->json([
+            'status' => 'created',
+            'data' => $genre
+        ], 201);
     }
 
     // PUT/PATCH /api/genres/{id}
     public function update(Request $request, int $id): JsonResponse
     {
         $genre = Genre::findOrFail($id);
-        $data = $request->validate([
-            'name' => 'sometimes|string|unique:genres,name,' . $genre->id,
+
+        $validated = $request->validate([
+            'name' => 'sometimes|string|max:255|unique:genres,name,'.$genre->id,
+            'description' => 'nullable|string' // Dodane pole description
         ]);
-        $genre->update($data);
-        return response()->json(['status'=>'updated','data'=>$genre], 200);
+
+        $genre->update($validated);
+        return response()->json([
+            'status' => 'updated',
+            'data' => $genre
+        ], 200);
     }
 
     // DELETE /api/genres/{id}
@@ -54,6 +75,9 @@ class GenreController extends Controller
     {
         $genre = Genre::findOrFail($id);
         $genre->delete();
-        return response()->json(['status'=>'deleted','message'=>'Genre removed'], 204);
+        return response()->json([
+            'status' => 'deleted',
+            'message' => 'Genre removed successfully'
+        ], 200); // Zmienione na 200 zamiast 204 aby zwracać message
     }
 }

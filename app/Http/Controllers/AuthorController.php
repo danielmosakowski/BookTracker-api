@@ -37,7 +37,7 @@ class AuthorController extends Controller
 
         // Obsługa zdjęcia (jeśli przesłane)
         if ($request->hasFile('photo')) {
-            $path = $request->file('photo')->store('public/authors');
+            $path = $request->file('photo')->store('public/authors/photos');
             $data['photo'] = Storage::url($path);
         }
 
@@ -66,7 +66,7 @@ class AuthorController extends Controller
                 Storage::delete($oldPhotoPath);
             }
 
-            $path = $request->file('photo')->store('public/authors');
+            $path = $request->file('photo')->store('public/authors/photos');
             $data['photo'] = Storage::url($path);
         }
 

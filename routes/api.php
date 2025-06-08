@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthorController;
+use App\Http\Controllers\GenreController;
 
 Route::prefix('auth')->group(function () {
     // Publiczne endpointy
@@ -35,10 +36,7 @@ Route::prefix('auth')->group(function () {
 
 
 
-// AUTHORS
-Route::prefix('auth')->group(function () {
-    // ... (poprzednie endpointy auth pozostają bez zmian)
-});
+
 
 // Publiczne endpointy (dostęp bez logowania)
 Route::get('/authors', [AuthorController::class, 'index']);
@@ -49,4 +47,19 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::post('/authors', [AuthorController::class, 'store']);
     Route::put('/authors/{id}', [AuthorController::class, 'update']);
     Route::delete('/authors/{id}', [AuthorController::class, 'destroy']);
+});
+
+
+
+
+// Publiczne endpointy (dostęp bez logowania)
+Route::get('/genres', [GenreController::class, 'index']);
+Route::get('/genres/{id}', [GenreController::class, 'show']);
+Route::get('/genres/{id}/books', [GenreController::class, 'books']);
+
+// Chronione endpointy (wymagają logowania i uprawnień admina)
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::post('/genres', [GenreController::class, 'store']);
+    Route::put('/genres/{id}', [GenreController::class, 'update']);
+    Route::delete('/genres/{id}', [GenreController::class, 'destroy']);
 });
