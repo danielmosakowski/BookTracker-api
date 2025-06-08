@@ -47,7 +47,7 @@ return [
     |
     */
 
-    'expiration' => null,
+    'expiration' => 525600, // Czas życia tokenów w minutach (domyślnie: 1 rok)
 
     /*
     |--------------------------------------------------------------------------

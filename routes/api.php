@@ -8,7 +8,8 @@ use App\Http\Controllers\AuthorController;
 Route::prefix('auth')->group(function () {
     // Publiczne endpointy
     Route::post('/register', [UserController::class, 'register']);
-    Route::post('/login', [UserController::class, 'login']);
+    //Route::post('/login', [UserController::class, 'login']);
+    Route::post('/login', [UserController::class, 'login'])->middleware('throttle:10,1');
 
     // Weryfikacja e-maila
     Route::get('/email/verify/{id}/{hash}', [UserController::class, 'verifyEmail'])
