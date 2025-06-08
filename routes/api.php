@@ -6,6 +6,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\UserGenreController;
+use App\Http\Controllers\BookController;
 
 Route::prefix('auth')->group(function () {
     // Publiczne endpointy
@@ -78,4 +79,19 @@ Route::get('/users/{userId}/user-genres', [UserGenreController::class, 'byUser']
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/user-genres', [UserGenreController::class, 'store']);
     Route::delete('/user-genres/{id}', [UserGenreController::class, 'destroy']);
+});
+
+
+
+
+// Book endpoints
+Route::get('/books', [BookController::class, 'index']);
+Route::get('/books/{id}', [BookController::class, 'show']);
+Route::get('/genres/{genreId}/books', [BookController::class, 'booksByGenre']);
+Route::get('/authors/{authorId}/books', [BookController::class, 'booksByAuthor']);
+
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::post('/books', [BookController::class, 'store']);
+    Route::put('/books/{id}', [BookController::class, 'update']);
+    Route::delete('/books/{id}', [BookController::class, 'destroy']);
 });
